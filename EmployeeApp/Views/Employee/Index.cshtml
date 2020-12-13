@@ -1,0 +1,124 @@
+﻿@model Employee;
+@{
+    ViewData["Title"] = "Employee";
+}
+
+<h2>Employees</h2>
+<br />
+<div id="search">
+    <label>Employee ID:</label>
+    <input asp-for="Id" id="txtID" type="number" min="1" />
+    <span asp-validation-for="Id" class="text-danger"></span>
+    <button type="button" class="btn btn-primary" id="btnGetEmployees">Get Employees</button>
+</div>
+<div id="errorMessage">
+    <span class="text-danger"></span>
+</div>
+<table id="employeeTable" class="table">
+    <thead>
+        <tr>
+            <th>@Html.DisplayNameFor(model => model.Name)</th>
+            <th>@Html.DisplayNameFor(model => model.RoleName)</th>
+            <th>@Html.DisplayNameFor(model => model.RoleDescription)</th>
+            <th>@Html.DisplayNameFor(model => model.ContractType)</th>
+            <th>@Html.DisplayNameFor(model => model.Salary)</th>
+        </tr>
+     </thead>
+    <tbody></tbody>
+</table>
+
+@section scripts {
+    <script type="text/javascript">
+
+        $(document).ready(GetEmployees());
+
+        function GetEmployees() {
+            clearTable();
+            $.ajax({
+                url: "/api/employee",
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    data.forEach(function (element) {
+                        addRow(element);
+                    });
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    showError(xhr.responseJSON.error);
+                }
+            });
+        }
+
+        function GetEmployeeById(id) {
+            clearTable();
+            $.ajax({
+                url: "/api/employee/" + id,
+                type: "GET",
+                dataType: "json",
+                success: function (data) {
+                    addRow(data);
+                },
+                error: function (xhr, textStatus, errorThrown) {
+                    showError(xhr.responseJSON.error);
+                }
+            });
+        }
+
+        function addRow(row) {
+
+            $("#employeeTable tr:last").after("<tr><td>"
+                + row["name"] + "</td>"
+                + "<td>" + row["roleName"] + "</td>"
+                + "<td>" + row["roleDescription"] + "</td>"
+                + "<td>" + row["contractType"] + "</td>"
+                + "<td>" + row["salary"] + "</td></tr>");
+        }
+
+        function clearTable() {
+            $("#errorMessage").hide();
+            $("#employeeTable").find("tr:gt(0)").remove();
+        }
+
+        function showError(error) {
+            $("#errorMessage").show();
+            $("#errorMessage span").text(error);
+        }
+
+        $("#btnGetEmployees").on("click", function () {
+            var id = $("#txtID").val();
+            if (id) {
+                GetEmployeeById(id);
+            } else {
+                GetEmployees();
+            }
+
+        });
+
+        $.validator.addMethod("minvalue",
+            function (value, element, parameters) {
+                return value > 0;
+            });
+
+        $.validator.unobtrusive.adapters.addBool("minvalue");
+
+    </script>
+}
+@section Styles
+    {
+    <style type="text/css">
+        #errorMessage{
+            padding: 2px;
+        }
+        #txtID {
+            width: 100px;
+            margin: 2px;
+        }
+        #search{
+            margin: 2px; 
+            padding:2px;
+        }
+        #employeeTable{
+            margin-top: 10px;
+        }
+    </style>
+}
